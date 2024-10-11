@@ -1,17 +1,20 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+const bcrypt = require('bcrypt');
+const pool = require('./config/db');
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+const saltRounds = 10;
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+async function inserirUsuario(nome, email, senha) {
+  try {
+    const senhaHash = await bcrypt.hash(senha, saltRounds);
+    const res = await pool.query(
+      'INSERT INTO usuarios (nome, email, senha_hash, data_criacao) VALUES ($1, $2, $3, NOW()) RETURNING *',
+      [nome, email, senhaHash]
+    );
+    console.log('Usuário inserido:', res.rows[0]);
+  } catch (err) {
+    console.error('Erro ao inserir usuário:', err);
+  }
+}
+
+inserirUsuario('João', 'joao@email.com', 'senha123');
+inserirUsuario('Maria', 'maria@email.com', 'senha456');
